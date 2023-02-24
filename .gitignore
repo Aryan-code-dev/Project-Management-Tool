@@ -2,4 +2,7 @@ db.sqlite3
 .vscode/
 env/
 static/
+token.json
+phase1.zip
+credentials.json
 *.pyc
