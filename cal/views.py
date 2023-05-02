@@ -15,31 +15,36 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-
+from googleapiclient.discovery import build
+import datetime
 from .models import *
 from .utils import Calendar
 from .forms import EventForm
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+SCOPES = ['https://www.googleapis.com/auth/calendar']
 def index(request):
     return HttpResponse('hello')
 
 class CalendarView(generic.ListView):
     model = Event
     template_name = 'cal/calendar.html'
-
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         d = get_date(self.request.GET.get('month', None))
-        cal = Calendar(d.year, d.month)
+        #print(d.year,d.month,d.day)
+        cal = Calendar(d.year, d.month,d.day)
         html_cal = cal.formatmonth(withyear=True)
         context['calendar'] = mark_safe(html_cal)
         context['prev_month'] = prev_month(d)
         context['next_month'] = next_month(d)
-        print(type(context))
-        return context
+        print(context['prev_month'])
+        print(context['next_month'])
+        if self.request.session["authenticated"] == True:
+            return context
 
 def get_date(req_month):
     if req_month:
+        print(req_month)
         year, month = (int(x) for x in req_month.split('-'))
         return date(year, month, day=1)
     return datetime.datetime.today()
@@ -68,47 +73,74 @@ def event(request, event_id=None):
     if request.POST and form.is_valid():
         print(form)
         form.save()
-        return HttpResponseRedirect(reverse('cal:calendar'))
+        if request.session["authenticated"] == True:
+             
+            return HttpResponseRedirect(reverse('cal:calendar'))
     return render(request, 'cal/event.html', {'form': form})
 
+
 class CalendarView1(generic.ListView):
-    print("hola")
     model = Event
     template_name = 'cal/calendar.html'
 
+    def get_credentials(self):
+        user_id = self.request.session.get('user_id')
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+                credentials = GoogleCalendar.objects.get(user=user)
+                creds = Credentials.from_authorized_user_info(info={
+                    'access_token': credentials.access_token,
+                    'refresh_token': credentials.refresh_token,
+                    'token_uri': 'https://oauth2.googleapis.com/token',
+                    'client_id': '349783946598-skhvjocccpn901vh3jcqu7qvkc2cv85k.apps.googleusercontent.com',
+                    'client_secret': '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',
+                    'expiry': credentials.token_expiry.replace(microsecond=0).strftime("%Y-%m-%dT%H:%M:%S") + "Z" if credentials.token_expiry else None,
+
+
+                })
+                return creds
+            except User.DoesNotExist:
+                pass
+            except GoogleCalendar.DoesNotExist:
+                pass
+
+        return None
 
     def get_events(self):
         """Shows basic usage of the Google Calendar API.
         Prints the start and name of the next 10 events on the user's calendar.
         """
-        # context = obj1.get_context_data()
-        creds = None
-        # The file token.json stores the user's access and refresh tokens, and is
-        # created automatically when the authorization flow completes for the first
-        # time.
-        if os.path.exists('token.json'):
-            creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-        # If there are no (valid) credentials available, let the user log in.
+        creds = self.get_credentials()
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
+                
                 creds.refresh(Request())
             else:
+                print("creds expired")
                 flow = InstalledAppFlow.from_client_secrets_file(
                     'cal/credentials.json', SCOPES)
                 creds = flow.run_local_server(port=0)
-            # Save the credentials for the next run
-            with open('token.json', 'w') as token:
-                token.write(creds.to_json())
+                user_id = self.request.session.get('user_id')
+                if user_id:
+                    try:
+                        user = User.objects.get(id=user_id)
+                        credentials = GoogleCalendar.objects.get_or_create(user=user)[0]
+                        credentials.access_token = creds.token
+                        credentials.refresh_token = creds.refresh_token
+                        credentials.token_expiry = creds.expiry
+                        credentials.save()
+                    except User.DoesNotExist:
+                        pass
 
-        # try:
         service = build('calendar', 'v3', credentials=creds)
 
-        # Call the Calendar API
-        now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+        now = datetime.datetime.utcnow().isoformat() + 'Z'
         print('Getting the upcoming 10 events')
         events_result = service.events().list(calendarId='primary', timeMin=now,
-                                                maxResults=10, singleEvents=True,
-                                                orderBy='startTime').execute()
+                                              maxResults=10, singleEvents=True,
+                                              orderBy='startTime').execute()
+                                              
         events = events_result.get('items', [])
 
         if not events:
@@ -117,7 +149,7 @@ class CalendarView1(generic.ListView):
         # Prints the start and name of the next 10 events
         for event in events:
             # print(Event.objects.filter(title = event['summary'],description=event['summary'],start_time=event['start']['dateTime'],end_time=event['end']['dateTime']))
-            if not Event.objects.filter(title = event['summary'],description=event['summary'],start_time=event['start']['dateTime'],end_time=event['end']['dateTime']):
+            if not Event.objects.filter(title = event['summary'],description=event['summary'],start_time=event['start']['dateTime'].split('+')[0],end_time=event['end']['dateTime'].split('+')[0]):
                 # a = Event.objects.filter(start_time=event['start']['dateTime'])
                 # b = Event.objects.filter(end_time=event['end']['dateTime'])
                 print(event['start']['dateTime'],event['end']['dateTime'])
@@ -127,6 +159,8 @@ class CalendarView1(generic.ListView):
                 event_instance.start_time=event['start']['dateTime'].split('+')[0]
                 event_instance.end_time=event['end']['dateTime'].split('+')[0]
                 event_instance.save()
+
+        #return CalendarView.get_context_data
         # except HttpError as error:
         #     print('An error occurred: %s' % error)
 
@@ -134,13 +168,12 @@ class CalendarView1(generic.ListView):
         self.get_events()
         context = super().get_context_data(**kwargs)
         d = get_date(self.request.GET.get('month', None))
-        cal = Calendar(d.year, d.month)
+        cal = Calendar(d.year, d.month,d.day)
         html_cal = cal.formatmonth(withyear=True)
         context['calendar'] = mark_safe(html_cal)
         context['prev_month'] = prev_month(d)
         context['next_month'] = next_month(d)
-        print(type(context))
-        return context
-
+        if self.request.session["authenticated"] == True:
+                return context
 
 
