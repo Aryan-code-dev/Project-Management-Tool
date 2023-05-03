@@ -140,9 +140,11 @@ def eventdata(request):
         # print((mail))
 
         attendees = mail.split(',')
-
+        attd= []
         for i in attendees:
-            print(i)
+            dynamic_email= {}
+            dynamic_email['email']=i
+            attd.append(dynamic_email)
 
         # event = {}
         # event['summary'] = summ
@@ -159,17 +161,14 @@ def eventdata(request):
             'location': loc,
             'description': desc,
             'start': {
-                'dateTime': start,
-                'timeZone': 'UTC',
+                'dateTime': start+':00-05:30',
+                'timeZone': 'IST',
             },
             'end': {
-                'dateTime': end,
-                'timeZone': 'UTC',
+                'dateTime': end+':00-05:30',
+                'timeZone': 'IST',
             },
-            'attendees': [
-                {'email': attendees},
-                
-            ],
+            'attendees': attd,
             'reminders': {
                 'useDefault': False,
                 'overrides': [
@@ -190,6 +189,7 @@ def eventdata(request):
 
 def get_credentials(request):
         user_id = request.session.get('user_id')
+        print("user id is:",user_id)
         if user_id:
             try:
                 user = User.objects.get(id=user_id)
@@ -236,5 +236,7 @@ def create_events(request,event):
                     pass
 
     service = build('calendar', 'v3', credentials=creds)
+    print("service created")
+    print(event)
     event = service.events().insert(calendarId='primary', body=event).execute()
     print ('Event created: %s' % (event.get('htmlLink')))
