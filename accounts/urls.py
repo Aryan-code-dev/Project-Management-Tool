@@ -10,4 +10,5 @@ urlpatterns = [
     path('logout', views.logout, name='logout'),
     path('homepage/manager', views.m_homepage, name='M_homepage'),
     path('homepage/employee', views.e_homepage, name='E_homepage'),
+    path('addevent',views.eventdata, name = 'addevent'),
 ]
