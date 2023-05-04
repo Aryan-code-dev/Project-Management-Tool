@@ -104,7 +104,7 @@ def signin(request):
                 #return render(request, "cal/templates/calcalendar.html",{"fname":fname})
                 return redirect('accounts:M_homepage')
             else:
-                return redirect(request,'accounts:E_homepage')
+                return redirect('accounts:E_homepage')
         else:
             messages.error(request, "Bad Credentials!!")
             return redirect('accounts:signin')
@@ -215,7 +215,7 @@ def get_credentials(request):
 def create_events(request,event):
     creds = get_credentials(request)
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
+        if not creds.expired:
             
             creds.refresh(Request())
         else:
