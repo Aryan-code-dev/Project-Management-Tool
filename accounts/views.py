@@ -161,11 +161,11 @@ def eventdata(request):
             'location': loc,
             'description': desc,
             'start': {
-                'dateTime': start+':00-05:30',
+                'dateTime': start+':00+05:30',
                 'timeZone': 'IST',
             },
             'end': {
-                'dateTime': end+':00-05:30',
+                'dateTime': end+':00+05:30',
                 'timeZone': 'IST',
             },
             'attendees': attd,
