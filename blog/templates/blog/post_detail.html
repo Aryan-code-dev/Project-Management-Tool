@@ -19,4 +19,29 @@
         <p class="article-content">{{ object.content }}</p>
     </div>
 </article>
+
+
+
+
+{% for comment in comments %}
+<article class="media content-section">
+    <!-- <img class="rounded-circle article-img"  src="{{ post.author.profile.image.url }}" > -->
+    <div class="media-body">
+        <div class="article-metadata">
+            <a class="mr-2">{{ comment.author }}</a>
+            <small class="text-muted">{{ comment.date_posted|date:" F d Y" }}</small>
+        </div>
+        <p class="article-content">{{ comment.content }}</p>
+    </div>
+</article>
+{% endfor %}
+
+<form action="comment/" method="post">
+    {%csrf_token%}
+    <label for="">Your Views</label>
+    <input type="text" id="user_comment" name = 'user_comment'> 
+    <input type="hidden" name="my_field" value="{{object.author.username}}">
+    <button type = "submit">Submit</button>
+</form>
+
 {% endblock content%}

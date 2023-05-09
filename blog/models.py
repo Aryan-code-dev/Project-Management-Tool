@@ -18,3 +18,8 @@ class Post(models.Model):
     def get_absolute_url(self):
         return reverse('blog:post_detail',kwargs={'pk' : self.pk})
     
+class comment(models.Model):
+    author = models.ForeignKey(User,on_delete=models.CASCADE)
+    content = models.CharField(max_length=500)
+    date_posted = models.DateTimeField(default=timezone.now)
+    post_id = models.ForeignKey(Post,on_delete = models.CASCADE)
