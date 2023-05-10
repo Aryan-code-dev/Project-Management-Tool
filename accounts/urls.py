@@ -6,6 +6,7 @@ urlpatterns = [
     path('', views.signin, name='signin'),
     path('signup', views.signup, name='signup'),
     path('', include('cal.urls')),
+    path('forum/', include('blog.urls')),
     # path('signout', views.signout, name='signout'),
     path('logout', views.logout, name='logout'),
     path('homepage/manager', views.m_homepage, name='M_homepage'),
