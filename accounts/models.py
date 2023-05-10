@@ -26,3 +26,10 @@ def create_user_profile(sender, instance, created, **kwargs):
        profile, created = UserProfile.objects.get_or_create(user=instance) 
 
 post_save.connect(create_user_profile, sender=User) 
+
+
+class EmployeeTasks(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    status = models.IntegerField(blank=True, null=True)
+    start = models.CharField(max_length=255, blank=True, null=True)
+    end = models.CharField(max_length=255, blank=True, null=True)

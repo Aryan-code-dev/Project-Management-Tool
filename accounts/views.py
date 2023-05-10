@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth import authenticate, login, logout
-from .models import UserProfile
+from .models import UserProfile,EmployeeTasks
 from cal.models import *
 
 from google.auth.transport.requests import Request
@@ -100,11 +100,12 @@ def signin(request):
             request.session["authenticated"] = True
             request.session["user_id"] = user.id
             request.session["designation"] = desig
+            tasks = EmployeeTasks.objects.get()
             if desig=="Project Manager":  
                 #return render(request, "cal/templates/calcalendar.html",{"fname":fname})
-                return redirect('accounts:M_homepage')
+                return render(request,'accounts/Mhomepage.html',tasks)
             else:
-                return redirect('accounts:E_homepage')
+                return render(request,'accounts:E_homepage')
         else:
             messages.error(request, "Bad Credentials!!")
             return redirect('accounts:signin')
@@ -154,8 +155,14 @@ def eventdata(request):
         # event['summary'] = summ
         # event['summary'] = summ
         # event['summary'] = summ
-
-
+        task = EmployeeTasks()
+        user_id = request.session.get('user_id')
+        user = User.objects.get(id=user_id)
+        task = EmployeeTasks.objects.get_or_create(user=user)[0]
+        task.status = 0
+        task.start = start+':00+05:30'
+        task.end = end+':00+05:30'
+        task.save()
         event = {
             'summary': summ,
             'location': loc,

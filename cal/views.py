@@ -113,7 +113,7 @@ class CalendarView1(generic.ListView):
         """
         creds = self.get_credentials()
         if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
+            if creds and not creds.expired:
                 
                 creds.refresh(Request())
             else:

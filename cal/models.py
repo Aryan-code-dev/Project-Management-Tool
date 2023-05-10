@@ -20,5 +20,5 @@ class GoogleCalendar(models.Model):
     refresh_token = models.CharField(max_length=255, blank=True, null=True)
     token_expiry = models.DateTimeField(blank=True, null=True)
 
-class EmployeeTasks(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+
