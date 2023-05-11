@@ -25,6 +25,27 @@ SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 # Create your views here.
 
+col_names = ['ID','Status','Deadline','Assigned By']
+def update(request):
+    if request.method == "POST":
+        id_g = request.POST['id']
+        status_g = request.POST['status']
+        task = EmployeeTasks.objects.get(id=id_g)
+        task.status=status_g
+        task.save()
+        tasks = []
+        t = EmployeeTasks.objects.all().filter(employee_id=request.session["user_id"])
+        print(type(t))
+        for j in t:
+            temp = []
+            temp.append(j.id)
+            temp.append(j.status)
+            temp.append(j.end)
+            u= User.objects.get(id =j.id)
+            temp.append(u.username)
+            tasks.append(temp)
+        print(tasks)
+        return render(request,'accounts/Ehomepage.html',{"list1":col_names,"list2":tasks})
 
 def signup(request):
     if request.method == "POST":
@@ -82,8 +103,7 @@ def logout(request):
     del request.session['user_id']
     messages.success(request, "Logged Out Successfully!!")
     return redirect('accounts:signin')
-
-
+    
 def signin(request):
    
     if request.method == 'POST':
@@ -94,18 +114,43 @@ def signin(request):
         user = authenticate(username=username, password=pass1)
 
         if user is not None:
-            login(request, user)
-            fname = user.username
-            messages.success(request, "Logged In Sucessfully!!")
-            request.session["authenticated"] = True
-            request.session["user_id"] = user.id
-            request.session["designation"] = desig
-            tasks = EmployeeTasks.objects.get()
-            if desig=="Project Manager":  
-                #return render(request, "cal/templates/calcalendar.html",{"fname":fname})
-                return render(request,'accounts/Mhomepage.html',tasks)
+            u = UserProfile.objects.get(user_id=user.id)
+            if u.designation==desig:
+                login(request, user)
+                fname = user.username
+                messages.success(request, "Logged In Sucessfully!!")
+                request.session["authenticated"] = True
+                request.session["user_id"] = user.id
+                request.session["designation"] = desig
+                
+
+                
+                if desig=="Project Manager":  
+                    #return render(request, "cal/templates/calcalendar.html",{"fname":fname})
+                    return render(request,'accounts/Mhomepage.html')
+                else:
+                    try:
+                        tasks = []
+                        t = EmployeeTasks.objects.all().filter(employee_id=request.session["user_id"])
+                        print(type(t))
+                        for j in t:
+                            temp = []
+                            temp.append(j.id)
+                            temp.append(j.status)
+                            temp.append(j.end)
+                            u= User.objects.get(id =j.id)
+                            temp.append(u.username)
+                            tasks.append(temp)
+                        print(tasks)
+                        return render(request,'accounts/Ehomepage.html',{"list1":col_names,"list2":tasks})
+
+                    except:
+                        tasks=[]
+                        return render(request,'accounts/Ehomepage.html',{"list1":col_names,"list2":tasks})
             else:
-                return render(request,'accounts:E_homepage')
+                messages.error(request, "wrong designation!!")
+                return redirect('accounts:signin')
+                    
         else:
             messages.error(request, "Bad Credentials!!")
             return redirect('accounts:signin')
@@ -146,6 +191,7 @@ def eventdata(request):
             dynamic_email= {}
             dynamic_email['email']=i
             attd.append(dynamic_email)
+            print(dynamic_email)
 
         # event = {}
         # event['summary'] = summ
@@ -156,13 +202,18 @@ def eventdata(request):
         # event['summary'] = summ
         # event['summary'] = summ
         task = EmployeeTasks()
+        
         user_id = request.session.get('user_id')
         user = User.objects.get(id=user_id)
-        task = EmployeeTasks.objects.get_or_create(user=user)[0]
-        task.status = 0
-        task.start = start+':00+05:30'
-        task.end = end+':00+05:30'
-        task.save()
+        for a in attd:
+            employee = User.objects.get(email=a['email'])
+            
+            task = EmployeeTasks.objects.get_or_create(user=user)[0]
+            task.employee_id = employee.id
+            task.status = 0
+            task.start = start+':00+05:30'
+            task.end = end+':00+05:30'
+            task.save()
         event = {
             'summary': summ,
             'location': loc,

@@ -10,6 +10,18 @@
             color: aliceblue;
             text-align: center;
         }
+        table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+tr:hover {background-color: coral;}
             </style>
 </head>
 <body>
@@ -24,14 +36,38 @@
           <form action="/calendar" class="inline">
           <button style="height: 50px;background-color: rgb(176, 204, 229);width: 90%;margin-left: 10px;margin-top: 10px;">Calendar</button>
         </form>
-          <button style="height: 50px;background-color: rgb(176, 204, 229);width: 90%;margin-left: 10px;margin-top: 10px;">Check assigned tasks</button>
           <form action="/forum" class="inline">
             <button style="height: 50px;background-color: rgb(176, 204, 229);width: 90%;margin-left: 10px;margin-top: 10px;">Forum</button>
           </form>   
         </div>  
               
         <div style="background-color: white; width:80%; height: 600px; float:left;">  
-            Here we will display task status
+            <h4>Task status</h4>
+            <table class="table tr th">
+                <tr class="table__header">
+                {% for i in list1 %}
+                <th class="table__cell">{{ i }}</th>
+                {% endfor %}
+                </tr>
+                {% for j in list2 %}
+                <tr class="table__row">
+                {% for cell in j %}
+                <td class="table__cell">{{ cell }}</td> 
+                {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+        </br>
+            <form onsubmit="" action="/update" method="post">
+                {% csrf_token %}
+                <input type="number" id="id" name="id">
+                <label for="id">Enter task ID:</label><br>
+                
+                <input type="number" id="status" name="status">
+                <label for="status">Enter new status:</label><br>
+                <input type="submit" value="submit">
+
+                </form>
         </div>  
              
               

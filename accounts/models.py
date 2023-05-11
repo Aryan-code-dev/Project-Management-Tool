@@ -33,3 +33,4 @@ class EmployeeTasks(models.Model):
     status = models.IntegerField(blank=True, null=True)
     start = models.CharField(max_length=255, blank=True, null=True)
     end = models.CharField(max_length=255, blank=True, null=True)
+    employee_id = models.IntegerField(blank=True, null=True)
