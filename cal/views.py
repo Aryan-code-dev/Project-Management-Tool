@@ -88,7 +88,10 @@ class CalendarView1(generic.ListView):
         if user_id:
             try:
                 user = User.objects.get(id=user_id)
+                print(user)
                 credentials = GoogleCalendar.objects.get(user=user)
+                print(credentials)
+
                 creds = Credentials.from_authorized_user_info(info={
                     'access_token': credentials.access_token,
                     'refresh_token': credentials.refresh_token,
@@ -96,8 +99,6 @@ class CalendarView1(generic.ListView):
                     'client_id': '349783946598-skhvjocccpn901vh3jcqu7qvkc2cv85k.apps.googleusercontent.com',
                     'client_secret': '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',
                     'expiry': credentials.token_expiry.replace(microsecond=0).strftime("%Y-%m-%dT%H:%M:%S") + "Z" if credentials.token_expiry else None,
-
-
                 })
                 return creds
             except User.DoesNotExist:
@@ -112,9 +113,10 @@ class CalendarView1(generic.ListView):
         Prints the start and name of the next 10 events on the user's calendar.
         """
         creds = self.get_credentials()
+        print("heelo ")
+        print("creds",creds)
         if not creds or not creds.valid:
             if creds and not creds.expired:
-                
                 creds.refresh(Request())
             else:
                 print("creds expired")

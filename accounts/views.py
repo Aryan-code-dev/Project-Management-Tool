@@ -174,7 +174,7 @@ def e_homepage(request):
     
 
 def eventdata(request):
-    print("hello")
+    # print("hello")
     if request.method == 'POST':
         summ =  request.POST['event_summ']
         loc =  request.POST['event_loc']
@@ -191,7 +191,7 @@ def eventdata(request):
             dynamic_email= {}
             dynamic_email['email']=i
             attd.append(dynamic_email)
-            print(dynamic_email)
+            # print(dynamic_email)
 
         # event = {}
         # event['summary'] = summ
@@ -235,9 +235,9 @@ def eventdata(request):
                 ],
             },
         }
-        print(event['start'])
-        print(event['end'])
-        print(event['attendees'])
+        # print(event['start'])
+        # print(event['end'])
+        # print(event['attendees'])
         create_events(request,event)
         return render(request, 'accounts/eventdata.html')    
 
@@ -273,8 +273,7 @@ def get_credentials(request):
 def create_events(request,event):
     creds = get_credentials(request)
     if not creds or not creds.valid:
-        if not creds.expired:
-            
+        if creds and not creds.expired:
             creds.refresh(Request())
         else:
             print("creds expired")
